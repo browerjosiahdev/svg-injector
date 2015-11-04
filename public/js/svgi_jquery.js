@@ -7,6 +7,8 @@
 * 
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.var console;
 */
+'use strict';
+
 if (typeof console === 'undefined') {
 	console = {
 		"log": function(v){},
@@ -17,8 +19,12 @@ if (typeof console === 'undefined') {
 
 var svgi_svgData = Object.create(null);
 
-function svgi_run() {
-	var elements = document.querySelectorAll('[data-svg-src]');
+function svgi_run( scope ) {
+	if (scope === undefined) {
+		scope = $;
+	}
+	
+	var elements = scope.find('[data-svg-src]');
 	
 	for (var inElements = 0; inElements < elements.length; inElements++) {
 		var element = elements[inElements],
@@ -53,14 +59,18 @@ function svgi_loadFile( src, callback, data /*optional*/ ) {
 	
 	if (xhr !== undefined) {
 		xhr.onreadystatechange = function() {
-			if (xhr.readyState === 4) {
+			if (xhr.readyState === 4 && xhr.status === 200) {
 				if (data !== undefined) {
 					callback(xhr, data);
 				} else {
 					callback(xhr);
 				}
 			} else {
-				console.warn("svgi_loadFile('" + src + "') request failed: " + xhr.readyState);
+				try {
+					if (xhr.status === 404) {
+						console.warn("svgi_loadFile('" + src + "') request failed: " + xhr.readyState);
+					}
+				} catch( error ) {}
 			}
 		}
 		

@@ -21,6 +21,17 @@
 <body onload="svgi_run();">
 	<button class="svg-container" data-svg-src="./img/back_btn.svg"></button>
 	<button class="svg-container" data-svg-src="./img/next_btn.svg"></button>
-	<script src="./js/svg_injector.min.js"></script>
+	<!--
+	Use the svgi_jquery.min.js version if the jquery library is being loaded in your site. This gives you the
+	ability to give a scope of DOM elements on which to perform the injection by passing the scope as a
+	parameter into the svgi_run() method as such: svgi_run($('#svgContainer'));
+	<script src="./js/jquery-1.11.2.min.js"></script>
+	<script src="./js/svgi_jquery.min.js"></script>
+	-->
+	<!--
+	Use svgi.min.js if jquery is not included in your site. When using the pure javascript version no scope
+	is available.
+	-->
+	<script src="./js/svgi.min.js"></script>
 </body>
 </html>
