@@ -2,7 +2,7 @@
 ---------------------------------------------------------------
 SVGI.js is a lightweight javascript library used to inject SVG code directly from .SVG files into DOM elements.
 
-If a .SVG file is loaded into an <img/> tag or by using the CSS "background-image" property you don't have access
+If a .SVG file is loaded into an img tag or by using the CSS "background-image" property you don't have access
 to editing the fill color through JavaScript or CSS. By using this library you can define a "data-svg-src" attribute
 on any DOM element, and it will load in the SVG content, and inject it directly into the DOM element so you can edit
 colors, etc through JavaScript or CSS.
