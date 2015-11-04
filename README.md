@@ -1,6 +1,6 @@
 #SVG Injector
 ---------------------------------------------------------------
-SVGI.js is a lightweight javascript file used to inject SVG code directly from .SVG files into DOM elements.
+SVGI.js is a lightweight javascript library used to inject SVG code directly from .SVG files into DOM elements.
 
 If a .SVG file is loaded into an <img/> tag or by using the CSS "background-image" property you don't have access
 to editing the fill color through JavaScript or CSS. By using this library you can define a "data-svg-src" attribute
