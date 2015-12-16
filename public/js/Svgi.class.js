@@ -21,8 +21,8 @@ if (typeof console === 'undefined') {
  * Constructor
 **/
 function Svgi() {
-	this.cleanseType;
-	this.hasRun;
+	this.cleanseType = Svgi.CLEANSEPRIMARY;
+	this.hasRun      = false;
 	this.scope;
 }
 
@@ -46,6 +46,8 @@ Svgi.prototype.run = function( scope ) {
 
 	var elements = scope.find('[data-svg-src]:not(.svg-set)');
 
+	console.log('run on ' + elements.length + ' element.');
+
 	for (var inElements = 0; inElements < elements.length; inElements++) {
 		var element = $(elements[inElements]),
 		    svgSrc  = element.attr('data-svg-src');
@@ -55,8 +57,9 @@ Svgi.prototype.run = function( scope ) {
 			    response   = xhr.responseText;
 
 			svgElement.html(svgElement.html() + this.cleanse(response));
-			svgElement.addClass('svg-set');
 		}.bind(this), {"element": element});
+
+		element.addClass('svg-set');
 	}
 
 	this.hasRun = true;
@@ -125,12 +128,6 @@ Svgi.prototype.cleanse = function( svgData ) {
 	return svgData.substr(svgData.indexOf('<svg'), svgData.length)
 								.replace(/(<\!--(.*?)-->)|(<\!\[CDATA\[(.*?)\]\]>)/g, '')
 								.replace(/fill="#([0-9A-F]{6}|[0-9A-F]{3})"/g, function( fill ) {
-									console.log(' -- this.cleanseType == ' + this.cleanseType);
-
-									if (this.cleanseType === undefined) {
-										this.cleanseType = Svgi.CLEANSEPRIMARY;
-									}
-
 									var hex = fill.match(/([0-9A-F]{6}|[0-9A-F]{3})/)[0]
 
 									switch (this.cleanseType) {
@@ -141,9 +138,6 @@ Svgi.prototype.cleanse = function( svgData ) {
 											var isNeutral = isNeutral || (hex.substr(0, 3) === hex.substr(3, 3));
 											    isNeutral = isNeutral || (hex.substr(0, 2) === hex.substr(2, 2) && hex.substr(2, 2) === hex.substr(4, 2));
 													isNeutral = isNeutral || (hex.length === 3 && hex.substr(0, 1) === hex.substr(1, 2) && hex.substr(1, 2) === hex.substr(2, 3));
-
-											console.log(' -- hex == ' + hex);
-											console.log(' -- isNeutral == ' + isNeutral);
 
 											if (isNeutral) {
 													return 'class="fill-neutral"';
