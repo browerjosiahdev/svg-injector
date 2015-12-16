@@ -21,14 +21,22 @@ if (typeof console === 'undefined') {
  * Constructor
 **/
 function Svgi() {
+	this.p_completeLib = Object.create(null);
+
 	this.cleanseType = Svgi.CLEANSEPRIMARY;
 	this.hasRun      = false;
 	this.scope;
+
+	$(this).on(Svgi.EVENTLOADED, this.svgLoaded);
+	$(this).on(Svgi.EVENTERROR, this.svgLoadError);
 }
 
 Svgi.CLEANSEPRIMARY = 'CLEANSE_PRIMARY';
 Svgi.CLEANSEUNIQUE  = 'CLEANSE_UNIQUE';
 Svgi.CLEANSEHEX     = 'CLEANSE_HEX';
+Svgi.EVENTLOADED    = 'SVG_EVENT_LOADED';
+Svgi.EVENTERROR     = 'SVG_EVENT_ERROR';
+Svgi.EVENTCOMPLETE  = 'SVG_EVENT_COMPLETE';
 
 /**
  * Method: run
@@ -45,24 +53,88 @@ Svgi.prototype.run = function( scope ) {
 	this.scope = scope;
 
 	var elements = scope.find('[data-svg-src]:not(.svg-set)');
+	if (elements.length > 0) {
+		var countId  = this.generateId();
 
-	console.log('run on ' + elements.length + ' element.');
+		this.p_completeLib[countId] = elements.length;
 
-	for (var inElements = 0; inElements < elements.length; inElements++) {
-		var element = $(elements[inElements]),
-		    svgSrc  = element.attr('data-svg-src');
+		for (var inElements = 0; inElements < elements.length; inElements++) {
+			var element = $(elements[inElements]),
+			    svgSrc  = element.attr('data-svg-src');
 
-		this.load(svgSrc, function( xhr, data ){
-			var svgElement = data.element,
-			    response   = xhr.responseText;
+			element.addClass('svg-set');
 
-			svgElement.html(svgElement.html() + this.cleanse(response));
-		}.bind(this), {"element": element});
-
-		element.addClass('svg-set');
+			if (svgSrc.match(/\.svg$/) !== null) {
+				this.load(svgSrc, {
+					"countId": countId,
+					"element": element
+				});
+			} else {
+				$(this).trigger({
+					"loadData": {
+						"countId": countId,
+						"element": element
+					},
+					"message": "Trying to load a non-svg file.",
+					"src": svgSrc,
+					"type": Svgi.EVENTERROR
+				});
+			}
+		}
 	}
 
 	this.hasRun = true;
+};
+
+/**
+ * Method: svgLoaded
+ *
+ * Called when an svg finishes loading.
+ *
+ * @param evntLoaded - Handle to the loaded event.
+**/
+Svgi.prototype.svgLoaded = function( evntLoaded ) {
+	var svgElement = evntLoaded.loadData.element,
+			response   = evntLoaded.xhr.responseText;
+
+	svgElement.html(svgElement.html() + this.cleanse(response));
+
+	this.markAsComplete(evntLoaded.loadData.countId);
+};
+
+/**
+ * Method: svgLoadError
+ *
+ * Called when an svg fails to load for some reason.
+ *
+ * @param evntError - Handle to the error event.
+**/
+Svgi.prototype.svgLoadError = function( evntError ) {
+	console.warn('Load error (' + evntError.src + '): ' + evntError.message);
+
+	this.markAsComplete(evntError.loadData.countId);
+}
+
+/**
+ * Method: markAsComplete
+ *
+ * Called to mark another item from the given run (defined by the
+ * countId parameter) is "complete"
+ *
+ * @param countId - ID to the unique counter for the current run.
+**/
+Svgi.prototype.markAsComplete = function( countId ) {
+	if (this.p_completeLib[countId] !== undefined) {
+		this.p_completeLib[countId]--;
+
+		if (this.p_completeLib[countId] > 0) {
+			return;
+		}
+	}
+
+	$(this).trigger({
+		"type": Svgi.EVENTCOMPLETE
+	});
 };
 
 /**
@@ -74,7 +146,7 @@ Svgi.prototype.run = function( scope ) {
  * @param callback - Method to call when the load has completed.
  * @param data - Data to pass to the callback method.
 **/
-Svgi.prototype.load = function( src, callback, data ) {
+Svgi.prototype.load = function( src, data ) {
 	var xhr;
 
 	if (typeof XMLHttpRequest !== 'undefined') {
@@ -92,19 +164,22 @@ Svgi.prototype.load = function( src, callback, data ) {
 	if (xhr !== undefined) {
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState === 4 && xhr.status === 200) {
-				if (data !== undefined) {
-					callback(xhr, data);
-				} else {
-					callback(xhr);
-				}
-			} else {
-				try {
-					if (xhr.status === 404) {
-						console.warn("load('" + src + "') request failed: " + xhr.readyState);
-					}
-				} catch( error ) {}
+				$(this).trigger({
+					"loadData": data,
+					"src": src,
+					"type": Svgi.EVENTLOADED,
+					"xhr": xhr
+				});
+			} else if (xhr.readyState === 4) {
+				$(this).trigger({
+					"loadData": data,
+					"message": xhr.responseText,
+					"src": src,
+					"type": Svgi.EVENTERROR,
+					"xhr": xhr
+				});
 			}
-		}
+		}.bind(this);
 
 		xhr.open('GET', src, true);
 		xhr.send('');
@@ -163,4 +238,17 @@ Svgi.prototype.cleanse = function( svgData ) {
 										}
 									}
 								}.bind(this));
+};
+
+/**
+ * Method: generateId
+ *
+ * Called to generate a random 10 digit ID.
+ *
+ * @return string value of a random 10 digit ID.
+**/
+Svgi.prototype.generateId = function() {
+	return '0000000000'.replace(/\d/g, function( char ) {
+		return String.fromCharCode(65 + (Math.random() * 25));
+	});
 };

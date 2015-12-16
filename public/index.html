@@ -29,19 +29,19 @@
 		/*Classes used for CLEANSEUNIQUE type.*/
 		.fill-0 {
 			cursor: pointer;
-			fill: #7A1501;
+			fill: #709C34;
 		}
 		.fill-0:hover {
-			fill: #C04E36;
+			fill: #9AC361;
 		}
 
 		/*Classes used for CLEANSEHEX type.*/
 		.fill-7A1501 {
 			cursor: pointer;
-			fill: #7A1501;
+			fill: #882D60;
 		}
 		.fill-7A1501:hover {
-			fill: #C04E36;
+			fill: #AA5585;
 		}
 	</style>
 </head>
@@ -64,9 +64,18 @@
 
 		svgi.run();
 
-		console.log('Has run? ' + svgi.hasRun);
-
-		svgi.run();
+		$(svgi).on(Svgi.EVENTLOADED, function( data ) {
+			console.log('Svgi Loaded()');
+			console.dir(data);
+		});
+		$(svgi).on(Svgi.EVENTERROR, function( data ) {
+			console.log('Svgi Error()');
+			console.dir(data);
+		});
+		$(svgi).on(Svgi.EVENTCOMPLETE, function( data ) {
+			console.log('Svgi Complete()');
+			console.dir(data);
+		});
 	</script>
 </body>
 </html>
