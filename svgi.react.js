@@ -1,43 +1,44 @@
 class SvgInjector extends React.Component {
     cleanse (svg) {
     	var hexFound = [];
-    	return (
-        	svg.substr(svg.indexOf('<svg'), svg.length)
-    		.replace(/(<\!--(.*?)-->)|(<\!\[CDATA\[(.*?)\]\]>)/g, '')
-    		.replace(/fill="#([0-9A-F]{6}|[0-9A-F]{3})"/g, (fill) => {
-    			var hex = fill.match(/([0-9A-F]{6}|[0-9A-F]{3})/)[0]
-
-    			switch (this.props.type) {
+    	svg = (
+    	    svg.substr(svg.indexOf('<svg'), svg.length)
+    	        .replace(/(<\!--(.*?)-->)|(<\!\[CDATA\[(.*?)\]\]>)/g, '')
+    	);
+    	if (this.props.stripFontFamily) {
+    	    svg = svg.replace(/font-family="([^"]+)"/g, 'font-family');
+    	}
+    	if (this.props.replaceFill && this.props.replaceFill != '') {
+    	    svg = svg.replace(/fill="#([0-9A-F]{6}|[0-9A-F]{3})"/g, (fill) => {
+    	        var hex = fill.match(/([0-9A-F]{6}|[0-9A-F]{3})/)[0];
+    			switch (this.props.replaceFill) {
     				case 'primary': {
     					var isNeutral = isNeutral || (hex.substr(0, 3) === hex.substr(3, 3));
-    					    isNeutral = isNeutral || (hex.substr(0, 2) === hex.substr(2, 2) && hex.substr(2, 2) === hex.substr(4, 2));
-    							isNeutral = isNeutral || (hex.length === 3 && hex.substr(0, 1) === hex.substr(1, 2) && hex.substr(1, 2) === hex.substr(2, 3));
-
+    					isNeutral = isNeutral || (hex.substr(0, 2) === hex.substr(2, 2) && hex.substr(2, 2) === hex.substr(4, 2));
+    					isNeutral = isNeutral || (hex.length === 3 && hex.substr(0, 1) === hex.substr(1, 2) && hex.substr(1, 2) === hex.substr(2, 3));
     					if (isNeutral) {
-    							return 'class="fill-neutral"';
+    						return 'class="fill-neutral"';
     					} else {
-    							return 'class="fill-color"';
+    					    return 'class="fill-color"';
     					}
-
     					break;
     				}
     				case 'unique': {
     					if (hexFound.indexOf(hex) > -1) {
-    						return 'class="fill-' + hexFound.indexOf(hex) + '"';
+    					    return 'class="fill-' + hexFound.indexOf(hex) + '"';
     					} else {
-    						hexFound.push(hex);
-
-    						return 'class="fill-' + (hexFound.length - 1) + '"';
+    					    hexFound.push(hex);
+    					    return 'class="fill-' + (hexFound.length - 1) + '"';
     					}
-
     					break;
     				}
     				case 'hex': {
     					return 'class="fill-' + hex + '"';
     				}
     			}
-    		})
-		);
+    	    });
+    	}
+    	return svg;
     }
     componentDidMount () {
         if (this.props.src) {
@@ -61,7 +62,8 @@ class SvgInjector extends React.Component {
     }
     render () {
         return (
-            <div
+            <div 
+                {...this.props}
                 className="svg-container"
                 dangerouslySetInnerHTML={{
                     __html: this.state.svg
